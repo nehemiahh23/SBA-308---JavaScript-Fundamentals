@@ -86,15 +86,24 @@ const CourseInfo = {
 		learner_ids.add(sub.learner_id)
 	}
 	
+	for (let i = 0; i < learner_ids.size; i++) {
+		result.push({
+			id: Array.from(learner_ids)[i],
+			scores: [],
+		})
+	}
+
+	for (sub of submissions) {
+		const learner = result.find(obj => obj.id === sub.learner_id)
+		const late = false
+		late ? learner.scores.push(sub.submission.score) : learner.scores.push(sub.submission.score - (sub.submission.score * 0.1))
+		console.log(learner)
+	}
+
 	for (let i = 0; i < assignments.length; i++) {
 		maxScore += assignments[i].points_possible
 	}
 	
-	for (let i = 0; i < learner_ids.size; i++) {
-		result.push({
-			id: Array.from(learner_ids)[i],
-		})
-	}
 	
 
 	return result
