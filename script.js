@@ -82,10 +82,12 @@ const CourseInfo = {
 	let maxScore = 0
 	const result = []
 
+	// gather all unique learner ids
 	for (sub of submissions) {
 		learner_ids.add(sub.learner_id)
 	}
 	
+	// construct learner objs from unique ids
 	for (let i = 0; i < learner_ids.size; i++) {
 		result.push({
 			id: Array.from(learner_ids)[i],
@@ -93,18 +95,29 @@ const CourseInfo = {
 		})
 	}
 
+	// add scores to learner objs, deducting points for lateness
 	for (sub of submissions) {
+		const assignment = assignments.find(obj => obj.id === sub.assignment_id)
+		if (!assignment) { continue }
+
+		let late = false
+		const due = assignment.due_at.split("-")
+		const date = sub.submission.submitted_at.split("-")
+		while (date.length > 0) {
+			date[0] > due[0] ? late = true: null
+			due.shift()
+			date.shift()
+		}
+
 		const learner = result.find(obj => obj.id === sub.learner_id)
-		const late = false
-		late ? learner.scores.push(sub.submission.score) : learner.scores.push(sub.submission.score - (sub.submission.score * 0.1))
-		console.log(learner)
+
+		late ? learner.scores.push(sub.submission.score - (sub.submission.score * 0.1)) : learner.scores.push(sub.submission.score)
 	}
 
+	// calculate max score for weighted avgs
 	for (let i = 0; i < assignments.length; i++) {
 		maxScore += assignments[i].points_possible
 	}
-	
-	
 
 	return result
   }
@@ -116,6 +129,7 @@ const CourseInfo = {
 	step 2: store total points possible by looping assignment group
   		ISSUE: look at canvas again to figure weighted avg algo
 	step 3: ISSUE: need individual assignment percentages
+  		solution?: handle everything in score population loop
 
 	OPT:
 	- confirm ag course_id matches courseinfo id
