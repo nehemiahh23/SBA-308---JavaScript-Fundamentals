@@ -95,7 +95,7 @@ const CourseInfo = {
 		})
 	}
 
-	// add scores to learner objs, deducting points for lateness
+	// add scores to learner objs, deducting points for lateness AND calculate learner grades for each assignment submission
 	for (sub of submissions) {
 		const assignment = assignments.find(obj => obj.id === sub.assignment_id)
 		if (!assignment) { continue }
@@ -110,14 +110,22 @@ const CourseInfo = {
 		}
 
 		const learner = result.find(obj => obj.id === sub.learner_id)
+		let score = sub.submission.score
+		late ? score -= assignment.points_possible * 0.1 : null
 
-		late ? learner.scores.push(sub.submission.score - (sub.submission.score * 0.1)) : learner.scores.push(sub.submission.score)
+		// learner.scores ? null : learner.scores = []
+		learner.scores.push(score)
+		learner[assignment.id] ? null : learner[assignment.id] = score / assignment.points_possible
 	}
 
 	// calculate max score for weighted avgs
 	for (let i = 0; i < assignments.length; i++) {
 		maxScore += assignments[i].points_possible
 	}
+
+	// for (learner of result) {
+
+	// }
 
 	return result
   }
