@@ -123,14 +123,20 @@ const CourseInfo = {
 		maxScore += assignments[i].points_possible
 	}
 
-	// for (learner of result) {
-
-	// }
+	// calculate weighted average
+	for (learner of result) {
+		let sum = 0
+		for (i = 0; i < learner.scores.length; i++) {
+			sum += learner.scores[i]
+		}
+		learner.avg = sum / maxScore
+		delete learner.scores
+	}
 
 	return result
   }
   
-  console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions))
+  console.table(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions))
 
   /* 
 	step 1: loop thru learner submissions, create learner objs in result arr w/ids only
