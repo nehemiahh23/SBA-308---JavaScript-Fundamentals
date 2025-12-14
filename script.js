@@ -77,26 +77,52 @@ const CourseInfo = {
   ];
   
   function getLearnerData(course, ag, submissions) {
-	// here, we would process this data to achieve the desired result.
-	const result = [
-	  {
-		id: 125,
-		avg: 0.985, // (47 + 150) / (50 + 150)
-		1: 0.94, // 47 / 50
-		2: 1.0 // 150 / 150
-	  },
-	  {
-		id: 132,
-		avg: 0.82, // (39 + 125) / (50 + 150)
-		1: 0.78, // 39 / 50
-		2: 0.833 // late: (140 - 15) / 150
-	  }
-	];
-  
-	return result;
+	const learner_ids = new Set()
+	const assignments = ag.assignments.filter(a => a.due_at.slice(0, 4) <= 2025)
+	let maxScore = 0
+	const result = []
+
+	for (sub of submissions) {
+		learner_ids.add(sub.learner_id)
+	}
+	
+	for (let i = 0; i < assignments.length; i++) {
+		maxScore += assignments[i].points_possible
+	}
+	
+	for (let i = 0; i < learner_ids.size; i++) {
+		result.push({
+			id: Array.from(learner_ids)[i],
+		})
+	}
+	
+
+	return result
   }
   
-  const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
+  console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions))
+
+  /* 
+	step 1: loop thru learner submissions, create learner objs in result arr w/ids only
+	step 2: store total points possible by looping assignment group
+  		ISSUE: look at canvas again to figure weighted avg algo
+	step 3: ISSUE: need individual assignment percentages
+
+	OPT:
+	- confirm ag course_id matches courseinfo id
+  */
   
-  console.log(result);
-  
+//   const result = [
+// 	{
+// 	  id: 125,
+// 	  avg: 0.985, // (47 + 150) / (50 + 150)
+// 	  1: 0.94, // 47 / 50
+// 	  2: 1.0 // 150 / 150
+// 	},
+// 	{
+// 	  id: 132,
+// 	  avg: 0.82, // (39 + 125) / (50 + 150)
+// 	  1: 0.78, // 39 / 50
+// 	  2: 0.833 // late: (140 - 15) / 150
+// 	}
+//   ];
