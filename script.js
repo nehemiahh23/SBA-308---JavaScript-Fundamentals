@@ -85,9 +85,7 @@ const CourseInfo = {
 		const result = []
 
 		// gather all unique learner ids
-		for (sub of submissions) {
-			learner_ids.add(sub.learner_id)
-		}
+		loopSubmissions("ids")
 		
 		// construct learner objs from unique ids
 		for (let i = 0; i < learner_ids.size; i++) {
@@ -96,35 +94,15 @@ const CourseInfo = {
 				scores: [],
 			})
 		}
-
+		
 		// add scores to learner objs, deducting points for lateness AND calculate learner grades for each assignment submission
-		for (sub of submissions) {
-			const assignment = assignments.find(obj => obj.id === sub.assignment_id)
-			if (!assignment) { continue }
-
-			let late = false
-			const due = assignment.due_at.split("-")
-			const date = sub.submission.submitted_at.split("-")
-			while (date.length > 0) {
-				date[0] > due[0] ? late = true: null
-				due.shift()
-				date.shift()
-			}
-
-			const learner = result.find(obj => obj.id === sub.learner_id)
-			let score = sub.submission.score
-			late ? score -= assignment.points_possible * 0.1 : null
-
-			// learner.scores ? null : learner.scores = []
-			learner.scores.push(score)
-			learner[assignment.id] ? null : learner[assignment.id] = score / assignment.points_possible
-		}
-
+		loopSubmissions("scores")
+		
 		// calculate max score for weighted avgs
 		for (let i = 0; i < assignments.length; i++) {
 			maxScore += assignments[i].points_possible
 		}
-
+		
 		// calculate weighted average
 		for (learner of result) {
 			let sum = 0
@@ -134,8 +112,44 @@ const CourseInfo = {
 			learner.avg = sum / maxScore
 			delete learner.scores
 		}
-
+		
 		return result
+		
+		// loop over submissions, behavior differs based on input
+		function loopSubmissions(action) {
+			switch (action) {
+				case "ids":
+					for (sub of submissions) {
+						learner_ids.add(sub.learner_id)
+					}
+					break;
+				case "scores":
+					for (sub of submissions) {
+						const assignment = assignments.find(obj => obj.id === sub.assignment_id)
+						if (!assignment) { continue }
+			
+						let late = false
+						const due = assignment.due_at.split("-")
+						const date = sub.submission.submitted_at.split("-")
+						while (date.length > 0) {
+							date[0] > due[0] ? late = true: null
+							due.shift()
+							date.shift()
+						}
+			
+						const learner = result.find(obj => obj.id === sub.learner_id)
+						let score = sub.submission.score
+						late ? score -= assignment.points_possible * 0.1 : null
+			
+						// learner.scores ? null : learner.scores = []
+						learner.scores.push(score)
+						learner[assignment.id] ? null : learner[assignment.id] = score / assignment.points_possible
+					}
+					break;
+				default:
+					throw new Error("Loop helper function recieved an invalid action command.")
+			}
+		}
 	} catch (error) {
 		console.error(`Function getLearnerData threw the following error: ${error.message}`)
 	}
