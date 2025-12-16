@@ -77,66 +77,71 @@ const CourseInfo = {
   ];
   
   function getLearnerData(course, ag, submissions) {
-	const learner_ids = new Set()
-	const assignments = ag.assignments.filter(a => a.due_at.slice(0, 4) <= 2025)
-	let maxScore = 0
-	const result = []
+	try {
+		if (ag.course_id !== course.id) { throw new Error("Assignment Group does not belong to course.") }
+		const learner_ids = new Set()
+		const assignments = ag.assignments.filter(a => a.due_at.slice(0, 4) <= 2025)
+		let maxScore = 0
+		const result = []
 
-	// gather all unique learner ids
-	for (sub of submissions) {
-		learner_ids.add(sub.learner_id)
-	}
-	
-	// construct learner objs from unique ids
-	for (let i = 0; i < learner_ids.size; i++) {
-		result.push({
-			id: Array.from(learner_ids)[i],
-			scores: [],
-		})
-	}
-
-	// add scores to learner objs, deducting points for lateness AND calculate learner grades for each assignment submission
-	for (sub of submissions) {
-		const assignment = assignments.find(obj => obj.id === sub.assignment_id)
-		if (!assignment) { continue }
-
-		let late = false
-		const due = assignment.due_at.split("-")
-		const date = sub.submission.submitted_at.split("-")
-		while (date.length > 0) {
-			date[0] > due[0] ? late = true: null
-			due.shift()
-			date.shift()
+		// gather all unique learner ids
+		for (sub of submissions) {
+			learner_ids.add(sub.learner_id)
+		}
+		
+		// construct learner objs from unique ids
+		for (let i = 0; i < learner_ids.size; i++) {
+			result.push({
+				id: Array.from(learner_ids)[i],
+				scores: [],
+			})
 		}
 
-		const learner = result.find(obj => obj.id === sub.learner_id)
-		let score = sub.submission.score
-		late ? score -= assignment.points_possible * 0.1 : null
+		// add scores to learner objs, deducting points for lateness AND calculate learner grades for each assignment submission
+		for (sub of submissions) {
+			const assignment = assignments.find(obj => obj.id === sub.assignment_id)
+			if (!assignment) { continue }
 
-		// learner.scores ? null : learner.scores = []
-		learner.scores.push(score)
-		learner[assignment.id] ? null : learner[assignment.id] = score / assignment.points_possible
-	}
+			let late = false
+			const due = assignment.due_at.split("-")
+			const date = sub.submission.submitted_at.split("-")
+			while (date.length > 0) {
+				date[0] > due[0] ? late = true: null
+				due.shift()
+				date.shift()
+			}
 
-	// calculate max score for weighted avgs
-	for (let i = 0; i < assignments.length; i++) {
-		maxScore += assignments[i].points_possible
-	}
+			const learner = result.find(obj => obj.id === sub.learner_id)
+			let score = sub.submission.score
+			late ? score -= assignment.points_possible * 0.1 : null
 
-	// calculate weighted average
-	for (learner of result) {
-		let sum = 0
-		for (i = 0; i < learner.scores.length; i++) {
-			sum += learner.scores[i]
+			// learner.scores ? null : learner.scores = []
+			learner.scores.push(score)
+			learner[assignment.id] ? null : learner[assignment.id] = score / assignment.points_possible
 		}
-		learner.avg = sum / maxScore
-		delete learner.scores
-	}
 
-	return result
+		// calculate max score for weighted avgs
+		for (let i = 0; i < assignments.length; i++) {
+			maxScore += assignments[i].points_possible
+		}
+
+		// calculate weighted average
+		for (learner of result) {
+			let sum = 0
+			for (i = 0; i < learner.scores.length; i++) {
+				sum += learner.scores[i]
+			}
+			learner.avg = sum / maxScore
+			delete learner.scores
+		}
+
+		return result
+	} catch (error) {
+		console.error(`Function getLearnerData threw the following error: ${error.message}`)
+	}
   }
   
-  console.table(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions))
+  console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions))
 
   /* 
 	step 1: loop thru learner submissions, create learner objs in result arr w/ids only
